@@ -1,35 +1,37 @@
-Problem Statement
-📢 Update: candidate_pairs.tsv is part of your final submission
+# Problem Statement
+## 📢 Update: candidate_pairs.tsv is part of your final submission
 Blocking has to scale. Amazon resolves business entities across billions of records, so comparing every record with every other one is not an option. Your blocking / candidate-generation step must cut the search space to a small candidate set per Source 1 entity.
 Candidate generation counts toward the final ranking. We will review your candidate_pairs.tsv and the code that produces it when deciding final rankings, alongside your matching_results.tsv score. The approach that generates a smaller candidate set per Source 1 entity will be ranked higher in the final evaluation beyond the public/private leaderboard.
-Business Entity Resolution Challenge
+### Business Entity Resolution Challenge
 In large-scale commercial platforms, business identity data arrives from multiple independent sources — each contributing partial, noisy fragments of information about the same real-world entities. These fragments share no common identifiers, and the challenge of determining which records refer to the same business is known as Entity Resolution (ER). Your challenge is to build an ML solution that, given business records from 3 independent data sources with noisy and inconsistent fields, determines which records across sources refer to the same real-world business entity.
 
 Source 1 is the deduplicated reference source. Your task is to find all matching records from Source 2 and Source 3 for each Source 1 entity. A Source 1 entity may match zero, one, or many records from Source 2 and Source 3.
 
-Download Data Set: Click here to Download
-File Format
+
+### File Format
 All files in this challenge are tab-separated (.tsv), and your submissions must be tab-separated too. Tabs are used because business addresses and the ID list columns both contain commas. Read them with an explicit tab separator, for example:
 
+```
 import pandas as pd
 df = pd.read_csv("dataset/train/train_source1.tsv", sep="\t")
 Reading a .tsv without sep="\t" will silently produce a single column containing the whole line.
+```
 
 Data Description:
 Each source file (*_source1.tsv, *_source2.tsv, *_source3.tsv) has the following columns:
-
+'''
 entity_id: Unique identifier for the record. The prefix indicates the source — S1-, S2-, or S3-.
 business_name: Name of the business entity (may contain abbreviations, legal suffixes, typos, transliterations)
 business_address: Address of the business (may contain partial addresses, format variations, missing components, landmark-based references)
 country: Country label for the record. The training data covers US and India. The test set additionally contains a third country, France, that does not appear in the training data. Treat country as an open set of string labels: do not hard-code, filter, or one-hot your pipeline to only {US, India}, and remember that every test entity — France included — must appear in your submission.
 There is no separate source column — a record's source is given by its entity_id prefix (S1-/S2-/S3-) and by which file it appears in.
-
+'''
 The ground truth file (train_ground_truth.tsv) has two columns:
-
+'''
 source1_entity_id: The entity_id of a Source 1 record
 matched_entity_ids: Comma-separated list of matching entity_ids from Source 2 and/or Source 3 (empty when the entity has no matches)
 Noise Patterns to Expect:
-
+'''
 Name variations: Abbreviations (Corp vs. Corporation, Pvt vs. Private, Ltd vs. Limited), legal suffix inconsistencies, DBA/trade names, punctuation differences (& vs. "and"), word-order transpositions, typos
 Address variations: Abbreviations (Rd vs. Road, St vs. Street), transliteration variants, missing components (no PIN code, no state), landmark-based references (Near SBI ATM), municipal numbering formats, component reordering
 Dataset Details:

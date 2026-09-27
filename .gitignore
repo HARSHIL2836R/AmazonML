@@ -1,1 +1,6 @@
 student_resource
+.venv/
+artifacts/
+output/
+__pycache__/
+*.egg-info/

@@ -1,0 +1,11 @@
+# Python 3.11. All licences permissive (MIT, BSD, Apache-2.0, ISC).
+polars==1.44.2          # MIT
+pyarrow==25.0.1         # Apache-2.0
+numpy==2.4.6            # BSD-3
+scipy==1.17.1           # BSD-3
+scikit-learn==1.9.1     # BSD-3
+lightgbm==4.7.0         # MIT (the matching model)
+rapidfuzz==3.14.6       # MIT
+sparse-dot-topn==1.2.0  # Apache-2.0
+anyascii==0.3.3         # ISC
+pytest==9.1.1           # MIT, tests only

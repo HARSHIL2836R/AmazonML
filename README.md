@@ -19,11 +19,12 @@ raw TSV ─► normalize ─► stage 1: retrieval ─► stage 2: pruning ─�
 | `src/ber/lexicon.py` | static word lists: legal forms, street types, state/region tables |
 | `src/ber/blocking.py` | stage 1: TF-IDF top-k inside (country, state) blocks on three channels (name char-3grams, address tokens, blend), in both directions |
 | `src/ber/prune.py` | stage 2: supervised meta-blocking. It keeps the stage-1 pairs that a small model on retrieval scores and ranks rates as plausible. Its output is `candidate_pairs.tsv` |
-| `src/ber/features.py` | pair features: rapidfuzz similarities, IDF-weighted name overlap, house-number and state agreement, competition context |
+| `src/ber/features.py` | pair features: rapidfuzz similarities, IDF-weighted name overlap and rarest-token match, house-number and state agreement, listwise competition context (rank/margin overall and per-source), same-source sibling agreement |
 | `src/ber/matcher.py` | LightGBM classifier |
 | `src/ber/decide.py` | each target kept only for its best S1, then a threshold tuned for macro F0.5 |
 | `src/ber/metrics.py` | the challenge metric, plus blocking recall and candidates per S1 |
 | `src/ber/pipeline.py` | orchestration, caching, fold roles |
+| `scripts/simulate_french_validation.py` | builds a labelled French validation set from documented noise operators applied to real French S1 test records, for threshold/feature-transfer checks where France has no training labels |
 
 Folds come from the numeric part of the S1 entity id. Folds 1-3 train the models. Fold 4 picks the pruning threshold, early-stops the matcher and tunes the match threshold. Fold 0 is only scored.
 

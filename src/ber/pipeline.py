@@ -195,9 +195,10 @@ def stage1(cfg: Config, split: str, s1n: pl.DataFrame, tgtn: pl.DataFrame, tp: p
     log(f"  targets without a block after state inference: {n_missing:,} ({n_missing / max(tgtn.height, 1):.2%})")
     keep = pl.DataFrame({"i1": keep_s1.astype(np.int32)}) if keep_s1 is not None else None
     parts = []
+    tgt_src = tgtn["src"].to_numpy()
     for country in sorted(s1n["country"].unique().to_list()):
         pairs = blocking.retrieve(s1n, tgtn, cfg.blocking, cfg.threads, log=log, countries=[country], blocks=blocks)
-        pairs = features.context_features(pairs)
+        pairs = features.context_features(pairs, tgt_src)
         if tp is not None:
             pairs = pairs.join(tp.with_columns(pl.lit(1, pl.Int8).alias("y")), on=["i1", "it"], how="left").with_columns(pl.col("y").fill_null(0))
         if keep is not None:
@@ -212,21 +213,22 @@ def stage1(cfg: Config, split: str, s1n: pl.DataFrame, tgtn: pl.DataFrame, tp: p
 def candidates(cfg: Config, split: str, s1n: pl.DataFrame, tgtn: pl.DataFrame, pruner: lgb.Booster, threshold: float) -> pl.DataFrame:
     """Stage 1 + stage 2 per country, keeping only the pruned candidates in memory."""
     path = cfg.run_dir(split) / "candidates.parquet"
-    fp = _hash("candidates", retrieval_fingerprint(cfg, split), _code(prune),
+    fp = _hash("candidates", retrieval_fingerprint(cfg, split), _code(prune, features.sibling_features),
                _file(_models_dir(cfg) / "pruner.txt"), threshold, cfg.blocking.max_per_s1)
     if _fresh(path, fp):
         return pl.read_parquet(path)
     blocks = (blocking.s1_blocks(s1n), blocking.target_blocks(s1n, tgtn))
+    tgt_src = tgtn["src"].to_numpy()
     parts = []
     for country in sorted(s1n["country"].unique().to_list()):
         pairs = features.context_features(
-            blocking.retrieve(s1n, tgtn, cfg.blocking, cfg.threads, log=log, countries=[country], blocks=blocks)
+            blocking.retrieve(s1n, tgtn, cfg.blocking, cfg.threads, log=log, countries=[country], blocks=blocks), tgt_src
         )
         kept = prune.select(prune.score(pairs, pruner), threshold, cfg.blocking.max_per_s1)
         log(f"  [{country}] stage 1 {pairs.height:,} -> candidates {kept.height:,}")
         parts.append(kept)
         del pairs
-    cands = pl.concat(parts).sort("i1")
+    cands = features.sibling_features(pl.concat(parts).sort("i1"), tgtn)
     cands.write_parquet(path)
     _stamp(path, fp)
     return cands
@@ -292,7 +294,7 @@ def train(cfg: Config) -> dict:
     pruner.save_model(str(_models_dir(cfg) / "pruner.txt"))
     pairs = prune.score(pairs, pruner)
     thr = prune.threshold_for_recall(pairs.filter(pl.col("fold") == tune_fold), cfg.blocking.prune_keep_share)
-    cands = prune.select(pairs, thr, cfg.blocking.max_per_s1)
+    cands = features.sibling_features(prune.select(pairs, thr, cfg.blocking.max_per_s1), tgtn)
     del pairs
     report["prune_threshold"] = thr
     report["candidates_val"] = blocking_report(cands, tp, val_ids, tgtn.height)

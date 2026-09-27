@@ -23,6 +23,7 @@ PRUNE_FEATURES = [
     "name_cos", "addr_cos", "ret_score",
     "name_fwd", "name_rev", "addr_fwd", "addr_rev", "blend_fwd", "blend_rev", "same_block",
     "s1_n_cands", "t_n_cands", "s1_gap", "t_gap", "s1_rank", "t_rank", "t_name_gap", "t_addr_gap",
+    "s1_src_n_cands", "s1_src_rank", "s1_src_gap", "s1_top2_gap", "t_top2_gap",
 ]
 
 
